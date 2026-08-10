@@ -1,5 +1,25 @@
 <?php
 $pageTitle='Usuarios';require __DIR__.'/../layouts/header.php';
+$roleLabels = [
+  'auxiliar_administrativo' => 'Auxiliar Administrativo',
+  'coordinador'             => 'Coordinador',
+  'operario'                => 'Operario',
+  'ayudante'                => 'Ayudante',
+  'residente_becario'       => 'Residente/Becario',
+  'control_de_obra'         => 'Control de Obra',
+  'supervisor_seguridad'    => 'Supervisor de Seguridad',
+  'contra_incendios'        => 'Contra Incendios',
+  'tecnico_instrumentista'  => 'Técnico Instrumentista',
+  'admin'                   => 'Administrador',
+  'tecnico'                 => 'Técnico',
+  'maestro'                 => 'Maestro',
+];
+$roleColors = [
+  'admin'             => 'danger',
+  'tecnico'           => 'warning',
+  'maestro'           => 'info',
+  'residente_becario' => 'primary',
+];
 ?>
 <?php if($success):?><div class="alert alert-success d-flex gap-2 mb-3"><i class="bi bi-check-circle-fill"></i>Operación completada correctamente.</div><?php endif;?>
 <div class="card">
@@ -11,7 +31,7 @@ $pageTitle='Usuarios';require __DIR__.'/../layouts/header.php';
     <tr>
       <td><strong><?=htmlspecialchars($u['nombre'].' '.$u['apellido'])?></strong></td>
       <td style="font-size:.85rem"><?=htmlspecialchars($u['email'])?></td>
-      <td><span class="badge bg-<?=['admin'=>'danger','tecnico'=>'warning','maestro'=>'info'][$u['rol']]??"secondary"?>"><?=ucfirst($u['rol'])?></span></td>
+      <td><span class="badge bg-<?= $roleColors[$u['rol']] ?? 'secondary' ?>"><?= htmlspecialchars($roleLabels[$u['rol']] ?? ucwords(str_replace('_', ' ', $u['rol']))) ?></span></td>
       <td style="font-size:.85rem"><?=htmlspecialchars($u['departamento']??'—')?></td>
       <td><span class="badge bg-<?=$u['activo']?'success':'secondary'?>"><?=$u['activo']?'Activo':'Inactivo'?></span></td>
       <td style="font-size:.8rem;color:#6b7c93"><?=date('d/m/Y',strtotime($u['creado_en']))?></td>

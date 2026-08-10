@@ -6,6 +6,7 @@ $roles = [
     'coordinador'             => 'Coordinador',
     'operario'                => 'Operario',
     'ayudante'                => 'Ayudante',
+    'residente_becario'       => 'Residente/Becario',
     'control_de_obra'         => 'Control de Obra',
     'supervisor_seguridad'    => 'Supervisor de Seguridad',
     'contra_incendios'        => 'Contra Incendios',
