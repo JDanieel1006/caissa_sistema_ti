@@ -30,6 +30,15 @@ class Asignacion {
         return $this->db->prepare("UPDATE asignaciones SET estado='devuelta',condicion_devolucion=?,fecha_devolucion_real=?,notas_devolucion=? WHERE id=?")->execute([$d['condicion_devolucion'],$d['fecha_devolucion_real'],$d['notas_devolucion']?:null,$id]);
     }
     public function cancelar(int $id):bool{return $this->db->prepare("UPDATE asignaciones SET estado='cancelada' WHERE id=?")->execute([$id]);}
+    public function addComentario(int $asignacionId,int $usuarioId,string $comentario):int{
+        $s=$this->db->prepare("INSERT INTO comentarios_asignacion (asignacion_id,usuario_id,comentario) VALUES (?,?,?)");
+        $s->execute([$asignacionId,$usuarioId,$comentario]);
+        return(int)$this->db->lastInsertId();
+    }
+    public function getComentarios(int $asignacionId):array{
+        $s=$this->db->prepare("SELECT ca.*,CONCAT(u.nombre,' ',u.apellido) AS nombre_usuario,u.rol AS rol_usuario FROM comentarios_asignacion ca JOIN usuarios u ON u.id=ca.usuario_id WHERE ca.asignacion_id=? ORDER BY ca.creado_en DESC, ca.id DESC");
+        $s->execute([$asignacionId]);return $s->fetchAll();
+    }
     public function getStats():array{
         return['total'=>(int)$this->db->query("SELECT COUNT(*) FROM asignaciones")->fetchColumn(),'activas'=>(int)$this->db->query("SELECT COUNT(*) FROM asignaciones WHERE estado='activa'")->fetchColumn(),'devueltas'=>(int)$this->db->query("SELECT COUNT(*) FROM asignaciones WHERE estado='devuelta'")->fetchColumn(),'vencidas'=>(int)$this->db->query("SELECT COUNT(*) FROM asignaciones WHERE estado='activa' AND fecha_devolucion_esperada IS NOT NULL AND fecha_devolucion_esperada<CURDATE()")->fetchColumn()];
     }

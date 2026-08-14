@@ -1,4 +1,4 @@
--- Agrega roles nuevos a usuarios.rol si la columna es ENUM.
+-- Agrega los puestos Auxiliar de Seguridad y Auxiliar de Oficina a usuarios.rol si la columna es ENUM.
 -- Ejecutar sobre la base de datos actual del sistema.
 
 ALTER TABLE usuarios

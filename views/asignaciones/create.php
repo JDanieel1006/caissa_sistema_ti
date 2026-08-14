@@ -3,11 +3,27 @@ $pageTitle = 'Nueva Asignación';
 require __DIR__ . '/../layouts/header.php';
 
 // Pasar usuarios como JSON para autocompletar departamento y puesto
+$roleLabels = [
+    'auxiliar_administrativo' => 'Auxiliar Administrativo',
+    'coordinador'             => 'Coordinador',
+    'operario'                => 'Operario',
+    'ayudante'                => 'Ayudante',
+    'residente_becario'       => 'Residente/Becario',
+    'auxiliar_seguridad'      => 'Auxiliar de Seguridad',
+    'auxiliar_oficina'        => 'Auxiliar de Oficina',
+    'control_de_obra'         => 'Control de Obra',
+    'supervisor_seguridad'    => 'Supervisor de Seguridad',
+    'contra_incendios'        => 'Contra Incendios',
+    'tecnico_instrumentista'  => 'Técnico Instrumentista',
+    'admin'                   => 'Administrador',
+    'tecnico'                 => 'Técnico',
+    'maestro'                 => 'Maestro',
+];
 $usuariosJson = json_encode(array_map(fn($u) => [
     'id'          => $u['id'],
     'nombre'      => $u['nombre'] . ' ' . $u['apellido'],
     'departamento'=> $u['departamento'] ?? '',
-    'rol'         => ucfirst($u['rol']),
+    'rol'         => $roleLabels[$u['rol']] ?? ucwords(str_replace('_', ' ', $u['rol'])),
     'activo'      => $u['activo'],
 ], $usuarios));
 ?>
@@ -36,7 +52,7 @@ $usuariosJson = json_encode(array_map(fn($u) => [
           <?php foreach ($usuarios as $u): if (!$u['activo']) continue; ?>
           <option value="<?= $u['id'] ?>"
                   data-depto="<?= htmlspecialchars($u['departamento'] ?? '') ?>"
-                  data-rol="<?= htmlspecialchars(ucfirst($u['rol'])) ?>"
+                  data-rol="<?= htmlspecialchars($roleLabels[$u['rol']] ?? ucwords(str_replace('_', ' ', $u['rol']))) ?>"
                   <?= (($_POST['usuario_id'] ?? '') == $u['id']) ? 'selected' : '' ?>>
             <?= htmlspecialchars($u['nombre'] . ' ' . $u['apellido']) ?>
           </option>

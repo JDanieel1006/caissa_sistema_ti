@@ -162,6 +162,89 @@ class EmailService {
         } catch (RuntimeException $e) { error_log('Email cambio estado mant: '.$e->getMessage()); return false; }
     }
 
+    public function notificarAsignacionEquipo(array $a, array $specs = []): bool {
+        try {
+            if (empty($a['email_usuario'])) return false;
+
+            $roleLabels = [
+                'auxiliar_administrativo' => 'Auxiliar Administrativo',
+                'coordinador'             => 'Coordinador',
+                'operario'                => 'Operario',
+                'ayudante'                => 'Ayudante',
+                'residente_becario'       => 'Residente/Becario',
+                'auxiliar_seguridad'      => 'Auxiliar de Seguridad',
+                'auxiliar_oficina'        => 'Auxiliar de Oficina',
+                'control_de_obra'         => 'Control de Obra',
+                'supervisor_seguridad'    => 'Supervisor de Seguridad',
+                'contra_incendios'        => 'Contra Incendios',
+                'tecnico_instrumentista'  => 'Técnico Instrumentista',
+                'admin'                   => 'Administrador',
+                'tecnico'                 => 'Técnico',
+                'maestro'                 => 'Maestro',
+            ];
+
+            $nombre = htmlspecialchars($a['nombre_usuario']);
+            $folio  = htmlspecialchars($a['folio']);
+            $codigo = htmlspecialchars($a['equipo_codigo']);
+            $fecha  = !empty($a['fecha_asignacion']) ? date('d/m/Y', strtotime($a['fecha_asignacion'])) : date('d/m/Y');
+            $puesto = htmlspecialchars($roleLabels[$a['rol_usuario'] ?? ''] ?? ucwords(str_replace('_', ' ', $a['rol_usuario'] ?? '')));
+            $depto  = htmlspecialchars($a['dept_usuario'] ?? '—');
+            $admin  = htmlspecialchars($a['nombre_admin'] ?? 'TI');
+            $devolucion = !empty($a['fecha_devolucion_esperada']) ? date('d/m/Y', strtotime($a['fecha_devolucion_esperada'])) : 'No definida';
+
+            $filasEquipo = $this->buildEquipoTabla($a);
+            $specsHtml   = $this->buildSpecsTabla($specs);
+            $seccionSpecs = $specsHtml ? "<div style='font-size:11px;font-weight:700;color:#9aafca;text-transform:uppercase;letter-spacing:.08em;margin:14px 0 6px'>Especificaciones técnicas</div><table style='width:100%;border-collapse:collapse'>$specsHtml</table>" : '';
+
+            $obra = !empty($a['nombre_obra'])
+                ? "<tr><td style='padding:5px 10px;font-weight:700;font-size:12px;color:#6b7c93;background:#f7faff;border:1px solid #dde4ef;width:35%'>Obra</td><td style='padding:5px 10px;font-size:12px;border:1px solid #dde4ef'>" . htmlspecialchars($a['nombre_obra']) . "</td></tr>"
+                : '';
+            $contrato = !empty($a['numero_contrato'])
+                ? "<tr><td style='padding:5px 10px;font-weight:700;font-size:12px;color:#6b7c93;background:#f7faff;border:1px solid #dde4ef;width:35%'>Contrato</td><td style='padding:5px 10px;font-size:12px;border:1px solid #dde4ef'>" . htmlspecialchars($a['numero_contrato']) . "</td></tr>"
+                : '';
+            $notas = !empty($a['notas_entrega'])
+                ? "<div style='background:#fff3cd;border:1px solid #ffe58a;border-radius:8px;padding:10px 14px;margin-top:14px;font-size:13px;line-height:1.6'><strong>Notas de entrega:</strong><br>" . nl2br(htmlspecialchars($a['notas_entrega'])) . "</div>"
+                : '';
+
+            $contenido = "<h2 style='margin:0 0 6px;color:#0d1b2a;font-size:18px;font-weight:800'>Hola, $nombre</h2>
+            <p style='margin:0 0 14px;color:#6b7c93;font-size:14px'>Se te ha asignado un equipo de cómputo. Te compartimos los datos de la asignación.</p>
+            <div style='background:#f7faff;border:1px solid #dde4ef;border-left:4px solid #0077ff;border-radius:10px;padding:12px 16px;margin-bottom:14px'>
+                <div style='font-family:monospace;font-weight:800;color:#0044bb;font-size:13px'>$folio</div>
+                <div style='font-size:12px;color:#6b7c93;margin-top:2px'>Equipo asignado: <strong>$codigo</strong> · $fecha</div>
+            </div>
+            <div style='font-size:11px;font-weight:700;color:#9aafca;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px'>Datos del usuario</div>
+            <table style='width:100%;border-collapse:collapse;margin-bottom:14px'>
+              <tr><td style='padding:5px 10px;font-weight:700;font-size:12px;color:#6b7c93;background:#f7faff;border:1px solid #dde4ef;width:35%'>Nombre</td><td style='padding:5px 10px;font-size:12px;border:1px solid #dde4ef'>$nombre</td></tr>
+              <tr><td style='padding:5px 10px;font-weight:700;font-size:12px;color:#6b7c93;background:#f7faff;border:1px solid #dde4ef;width:35%'>Puesto / Rol</td><td style='padding:5px 10px;font-size:12px;border:1px solid #dde4ef'>$puesto</td></tr>
+              <tr><td style='padding:5px 10px;font-weight:700;font-size:12px;color:#6b7c93;background:#f7faff;border:1px solid #dde4ef;width:35%'>Departamento</td><td style='padding:5px 10px;font-size:12px;border:1px solid #dde4ef'>$depto</td></tr>
+            </table>
+            <div style='font-size:11px;font-weight:700;color:#9aafca;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px'>Equipo asignado</div>
+            <table style='width:100%;border-collapse:collapse'>$filasEquipo</table>
+            $seccionSpecs
+            <div style='font-size:11px;font-weight:700;color:#9aafca;text-transform:uppercase;letter-spacing:.08em;margin:14px 0 6px'>Datos de asignación</div>
+            <table style='width:100%;border-collapse:collapse'>
+              <tr><td style='padding:5px 10px;font-weight:700;font-size:12px;color:#6b7c93;background:#f7faff;border:1px solid #dde4ef;width:35%'>Fecha de asignación</td><td style='padding:5px 10px;font-size:12px;border:1px solid #dde4ef'>$fecha</td></tr>
+              <tr><td style='padding:5px 10px;font-weight:700;font-size:12px;color:#6b7c93;background:#f7faff;border:1px solid #dde4ef;width:35%'>Devolución esperada</td><td style='padding:5px 10px;font-size:12px;border:1px solid #dde4ef'>$devolucion</td></tr>
+              <tr><td style='padding:5px 10px;font-weight:700;font-size:12px;color:#6b7c93;background:#f7faff;border:1px solid #dde4ef;width:35%'>Entregado por</td><td style='padding:5px 10px;font-size:12px;border:1px solid #dde4ef'>$admin</td></tr>
+              $obra
+              $contrato
+            </table>
+            $notas
+            <p style='margin:16px 0 0;color:#6b7c93;font-size:12px;line-height:1.5'>Por favor conserva este correo como comprobante de la asignación y reporta cualquier detalle del equipo al área de TI.</p>";
+
+            $this->mailer()->send(
+                $a['email_usuario'],
+                $a['nombre_usuario'],
+                '[' . $a['folio'] . '] Asignación de equipo ' . $a['equipo_codigo'],
+                $this->wrap($contenido)
+            );
+            return true;
+        } catch (RuntimeException $e) {
+            error_log('Email asignacion: ' . $e->getMessage());
+            return false;
+        }
+    }
+
     // ── Helpers privados ──────────────────────────────────────────────────
     private function buildEquipoTabla(array $m): string {
         $filas = [

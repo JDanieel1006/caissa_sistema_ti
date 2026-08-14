@@ -99,6 +99,7 @@ switch ($controller) {
             'acta'          => $ctrl->acta(),
             'buscarEquipos' => $ctrl->buscarEquipos(),
             'contrato'      => $ctrl->contrato(),
+            'reenviarEmail' => $ctrl->reenviarEmail(),
             default         => $ctrl->index(),
         };
         break;

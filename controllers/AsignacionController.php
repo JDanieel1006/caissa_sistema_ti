@@ -2,16 +2,19 @@
 require_once __DIR__ . '/../models/Asignacion.php';
 require_once __DIR__ . '/../models/Equipo.php';
 require_once __DIR__ . '/../models/User.php';
+require_once __DIR__ . '/../services/EmailService.php';
 
 class AsignacionController {
     private Asignacion $asigModel;
     private Equipo     $equipoModel;
     private User       $userModel;
+    private EmailService $emailService;
 
     public function __construct() {
         $this->asigModel   = new Asignacion();
         $this->equipoModel = new Equipo();
         $this->userModel   = new User();
+        $this->emailService= new EmailService();
     }
 
     public function index(): void {
@@ -53,6 +56,11 @@ class AsignacionController {
                     'nombre_obra'              => $_POST['nombre_obra']       ?? '',
                     'numero_contrato'          => $_POST['numero_contrato']   ?? '',
                 ]);
+                $asignacion = $this->asigModel->getById($id);
+                if ($asignacion) {
+                    $specs = $this->equipoModel->getEspecificaciones($equipoId);
+                    $this->emailService->notificarAsignacionEquipo($asignacion, $specs);
+                }
                 header('Location: index.php?c=asignaciones&a=detail&id='.$id.'&msg=creada');
                 exit;
             }
@@ -83,10 +91,39 @@ class AsignacionController {
             } elseif ($action === 'cancelar') {
                 $this->asigModel->cancelar($id);
                 header('Location: index.php?c=asignaciones&a=detail&id='.$id.'&msg=cancelada'); exit;
+            } elseif ($action === 'comentar') {
+                $comentario = trim($_POST['comentario'] ?? '');
+                if ($comentario === '') {
+                    $error = 'Escribe un comentario antes de guardarlo.';
+                } else {
+                    $this->asigModel->addComentario($id, (int)$_SESSION['user_id'], $comentario);
+                    header('Location: index.php?c=asignaciones&a=detail&id='.$id.'&msg=comentario'); exit;
+                }
             }
         }
         $asig = $this->asigModel->getById($id);
+        $comentarios = $this->asigModel->getComentarios($id);
         require __DIR__ . '/../views/asignaciones/detail.php';
+    }
+
+    public function reenviarEmail(): void {
+        $this->requireAdmin();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?c=asignaciones');
+            exit;
+        }
+
+        $id   = (int)($_POST['id'] ?? 0);
+        $asig = $this->asigModel->getById($id);
+        if (!$asig) {
+            header('Location: index.php?c=asignaciones');
+            exit;
+        }
+
+        $specs = $this->equipoModel->getEspecificaciones((int)$asig['equipo_id']);
+        $ok = $this->emailService->notificarAsignacionEquipo($asig, $specs);
+        header('Location: index.php?c=asignaciones&a=detail&id=' . $id . '&msg=' . ($ok ? 'email_reenviado' : 'email_error'));
+        exit;
     }
 
     public function buscarEquipos(): void {

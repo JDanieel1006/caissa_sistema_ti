@@ -10,7 +10,23 @@ foreach ($specs as $s) {
 if (!empty($especsLinea)) $descripcion .= ' — ' . implode(', ', $especsLinea);
 if ($asig['equipo_serie']) $descripcion .= '. No. Serie: ' . $asig['equipo_serie'];
 
-$puesto  = ucfirst($asig['rol_usuario'] ?? '');
+$roleLabels = [
+    'auxiliar_administrativo' => 'Auxiliar Administrativo',
+    'coordinador'             => 'Coordinador',
+    'operario'                => 'Operario',
+    'ayudante'                => 'Ayudante',
+    'residente_becario'       => 'Residente/Becario',
+    'auxiliar_seguridad'      => 'Auxiliar de Seguridad',
+    'auxiliar_oficina'        => 'Auxiliar de Oficina',
+    'control_de_obra'         => 'Control de Obra',
+    'supervisor_seguridad'    => 'Supervisor de Seguridad',
+    'contra_incendios'        => 'Contra Incendios',
+    'tecnico_instrumentista'  => 'Técnico Instrumentista',
+    'admin'                   => 'Administrador',
+    'tecnico'                 => 'Técnico',
+    'maestro'                 => 'Maestro',
+];
+$puesto  = $roleLabels[$asig['rol_usuario'] ?? ''] ?? ucwords(str_replace('_', ' ', $asig['rol_usuario'] ?? ''));
 $folio   = str_pad($asig['id'], 6, '0', STR_PAD_LEFT);
 $logoUrl = '../public/img/logo.jpg'; // Ruta relativa desde views/asignaciones/
 $totalFilasVacias = max(0, 8 - 1); // 8 filas totales menos 1 (el equipo asignado)

@@ -6,6 +6,8 @@ $roleLabels = [
   'operario'                => 'Operario',
   'ayudante'                => 'Ayudante',
   'residente_becario'       => 'Residente/Becario',
+  'auxiliar_seguridad'      => 'Auxiliar de Seguridad',
+  'auxiliar_oficina'        => 'Auxiliar de Oficina',
   'control_de_obra'         => 'Control de Obra',
   'supervisor_seguridad'    => 'Supervisor de Seguridad',
   'contra_incendios'        => 'Contra Incendios',
@@ -19,6 +21,8 @@ $roleColors = [
   'tecnico'           => 'warning',
   'maestro'           => 'info',
   'residente_becario' => 'primary',
+  'auxiliar_seguridad'=> 'dark',
+  'auxiliar_oficina'  => 'secondary',
 ];
 ?>
 <?php if($success):?><div class="alert alert-success d-flex gap-2 mb-3"><i class="bi bi-check-circle-fill"></i>Operación completada correctamente.</div><?php endif;?>
