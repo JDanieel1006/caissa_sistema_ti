@@ -71,7 +71,7 @@ require __DIR__ . '/../layouts/header.php';
 <div class="card">
   <div class="card-body p-0">
   <div class="table-responsive">
-  <table class="table table-hover mb-0 align-middle" id="tblBajas">
+  <table class="table table-hover mb-0 align-middle <?= empty($bajas) ? '' : 'js-data-table' ?>" id="tblBajas">
     <thead class="table-dark">
       <tr>
         <th>Folio</th>

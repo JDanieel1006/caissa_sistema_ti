@@ -28,7 +28,7 @@ $roleColors = [
 <?php if($success):?><div class="alert alert-success d-flex gap-2 mb-3"><i class="bi bi-check-circle-fill"></i>Operación completada correctamente.</div><?php endif;?>
 <div class="card">
   <div class="card-header d-flex align-items-center justify-content-between"><span><i class="bi bi-people me-2 text-primary"></i>Usuarios <span class="badge bg-primary ms-1"><?=count($users)?></span></span><a href="index.php?c=users&a=create" class="btn btn-sm btn-primary"><i class="bi bi-person-plus me-1"></i>Nuevo</a></div>
-  <div class="table-responsive"><table class="table mb-0">
+  <div class="table-responsive"><table class="table mb-0 js-data-table">
     <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Departamento</th><th>Estado</th><th>Alta</th><th style="width:80px"></th></tr></thead>
     <tbody>
     <?php foreach($users as $u):?>

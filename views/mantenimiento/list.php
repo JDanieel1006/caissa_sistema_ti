@@ -56,7 +56,7 @@ require __DIR__ . '/../layouts/header.php';
   <?php if(empty($mantenimientos)):?>
   <div class="card-body text-center py-5 text-muted"><i class="bi bi-tools" style="font-size:3rem"></i><p class="mt-3 mb-1">Sin mantenimientos registrados.</p><a href="index.php?c=mantenimiento&a=create" class="btn btn-primary btn-sm mt-2"><i class="bi bi-plus me-1"></i>Programar mantenimiento</a></div>
   <?php else:?>
-  <div class="table-responsive"><table class="table mb-0">
+  <div class="table-responsive"><table class="table mb-0 js-data-table">
     <thead><tr><th>Folio</th><th>Equipo</th><th>Tipo</th><th>Fecha Prog.</th><th>Técnico</th><th>Estado</th><th style="width:80px"></th></tr></thead>
     <tbody>
     <?php foreach($mantenimientos as $m):

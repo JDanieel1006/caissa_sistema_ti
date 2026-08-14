@@ -18,8 +18,16 @@ class Equipo {
         if(!empty($f['categoria_id'])){$w[]='e.categoria_id=?';$p[]=$f['categoria_id'];}
         if(!empty($f['estado'])){$w[]='e.estado=?';$p[]=$f['estado'];}
         if(!empty($f['buscar'])){$w[]='(e.codigo LIKE ? OR e.marca LIKE ? OR e.modelo LIKE ? OR e.numero_serie LIKE ? OR e.ubicacion LIKE ? OR e.direccion_ip LIKE ? OR e.direccion_mac LIKE ?)';$q='%'.$f['buscar'].'%';$p=array_merge($p,[$q,$q,$q,$q,$q,$q,$q]);}
-        $s=$this->db->prepare("SELECT e.id,e.categoria_id,e.codigo,e.marca,e.modelo,e.numero_serie,e.direccion_mac,e.direccion_ip,e.usuario_pc,e.contrasena_pc,e.ubicacion,e.estado,e.notas,e.fecha_compra,e.creado_por,e.creado_en,e.actualizado_en,c.nombre AS categoria_nombre,c.icono AS categoria_icono,ie.id AS img_principal_id,ie.nombre_archivo AS img_principal FROM equipos e JOIN categorias_equipo c ON c.id=e.categoria_id LEFT JOIN imagenes_equipo ie ON ie.equipo_id=e.id AND ie.es_principal=1 WHERE ".implode(' AND ',$w)." ORDER BY c.nombre,e.codigo");
+        $s=$this->db->prepare("SELECT e.id,e.categoria_id,e.codigo,e.marca,e.modelo,e.numero_serie,e.direccion_mac,e.direccion_ip,e.usuario_pc,e.contrasena_pc,e.ubicacion,e.estado,e.notas,e.fecha_compra,e.creado_por,e.creado_en,e.actualizado_en,c.nombre AS categoria_nombre,c.icono AS categoria_icono,ie.id AS img_principal_id,ie.nombre_archivo AS img_principal,aa.id AS asignacion_activa_id,aa.folio AS asignacion_activa_folio,CONCAT(au.nombre,' ',au.apellido) AS asignacion_activa_usuario FROM equipos e JOIN categorias_equipo c ON c.id=e.categoria_id LEFT JOIN imagenes_equipo ie ON ie.equipo_id=e.id AND ie.es_principal=1 LEFT JOIN asignaciones aa ON aa.equipo_id=e.id AND aa.estado='activa' LEFT JOIN usuarios au ON au.id=aa.usuario_id WHERE ".implode(' AND ',$w)." ORDER BY c.nombre,e.codigo");
         $s->execute($p);return $s->fetchAll();
+    }
+    public function searchForAsignacion(string $q='',int $page=1,int $perPage=20):array{
+        $page=max(1,$page);$perPage=max(1,min(50,$perPage));$offset=($page-1)*$perPage;$limit=$perPage+1;
+        $w=['1=1'];$p=[];
+        if($q!==''){$w[]='(e.codigo LIKE ? OR e.marca LIKE ? OR e.modelo LIKE ? OR e.numero_serie LIKE ? OR c.nombre LIKE ?)';$like='%'.$q.'%';$p=array_merge($p,[$like,$like,$like,$like,$like]);}
+        $sql="SELECT e.id,e.codigo,e.marca,e.modelo,e.numero_serie,c.nombre AS categoria_nombre,aa.id AS asignacion_activa_id,aa.folio AS asignacion_activa_folio,CONCAT(u.nombre,' ',u.apellido) AS asignacion_activa_usuario FROM equipos e JOIN categorias_equipo c ON c.id=e.categoria_id LEFT JOIN asignaciones aa ON aa.equipo_id=e.id AND aa.estado='activa' LEFT JOIN usuarios u ON u.id=aa.usuario_id WHERE ".implode(' AND ',$w)." ORDER BY c.nombre,e.codigo LIMIT $limit OFFSET $offset";
+        $s=$this->db->prepare($sql);$s->execute($p);$rows=$s->fetchAll();
+        return['items'=>array_slice($rows,0,$perPage),'more'=>count($rows)>$perPage];
     }
     public function getById(int $id):array|false{
         $s=$this->db->prepare("SELECT e.id,e.categoria_id,e.codigo,e.marca,e.modelo,e.numero_serie,e.direccion_mac,e.direccion_ip,e.usuario_pc,e.contrasena_pc,e.ubicacion,e.estado,e.notas,e.fecha_compra,e.creado_por,e.creado_en,e.actualizado_en,c.nombre AS categoria_nombre,c.icono AS categoria_icono FROM equipos e JOIN categorias_equipo c ON c.id=e.categoria_id WHERE e.id=?");

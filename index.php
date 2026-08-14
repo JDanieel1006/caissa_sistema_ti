@@ -98,6 +98,7 @@ switch ($controller) {
             'detail'        => $ctrl->detail(),
             'acta'          => $ctrl->acta(),
             'buscarEquipos' => $ctrl->buscarEquipos(),
+            'buscarUsuarios'=> $ctrl->buscarUsuarios(),
             'contrato'      => $ctrl->contrato(),
             'reenviarEmail' => $ctrl->reenviarEmail(),
             default         => $ctrl->index(),

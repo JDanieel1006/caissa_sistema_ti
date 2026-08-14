@@ -77,7 +77,7 @@ $invData    = json_encode([$statsEquipos['buenos'], $statsEquipos['danados'] ?? 
         <span><i class="bi bi-clock-history me-2 text-primary"></i>Tickets Recientes</span>
         <a href="index.php?c=tickets" class="btn btn-sm btn-outline-primary">Ver todos</a>
       </div>
-      <div class="table-responsive"><table class="table mb-0">
+      <div class="table-responsive"><table class="table mb-0 js-data-table">
         <thead><tr><th>Folio</th><th>Título</th><th>Estado</th><th>Prioridad</th><th>Fecha</th></tr></thead>
         <tbody>
         <?php foreach ($ticketsRecientes as $t):
@@ -108,7 +108,7 @@ $invData    = json_encode([$statsEquipos['buenos'], $statsEquipos['danados'] ?? 
         <p class="mt-2 mb-0" style="font-size:.85rem">Sin asignaciones activas.</p>
       </div>
       <?php else: ?>
-      <div class="table-responsive"><table class="table mb-0">
+      <div class="table-responsive"><table class="table mb-0 js-data-table">
         <thead><tr><th>Folio</th><th>Equipo</th><th>Usuario</th><th></th></tr></thead>
         <tbody>
         <?php foreach ($asignacionesActivas as $a):

@@ -12,7 +12,7 @@ $abiertos=$stats['abierto']??0;$proceso=$stats['en_proceso']??0;$resueltos=$stat
   <div class="col-lg-8">
     <div class="card">
       <div class="card-header d-flex align-items-center justify-content-between"><span><i class="bi bi-clock-history me-2 text-primary"></i>Mis Tickets Recientes</span><a href="index.php?c=tickets" class="btn btn-sm btn-outline-primary">Ver todos</a></div>
-      <div class="table-responsive"><table class="table mb-0">
+      <div class="table-responsive"><table class="table mb-0 <?= empty($tickets) ? '' : 'js-data-table' ?>">
         <thead><tr><th>Folio</th><th>Título</th><th>Categoría</th><th>Estado</th><th>Fecha</th></tr></thead>
         <tbody>
         <?php foreach($tickets as $t):$est=$estados[$t['estado']]??['label'=>$t['estado'],'color'=>'secondary'];$cat=$categorias[$t['categoria']]??['label'=>$t['categoria'],'icon'=>'bi-tools'];?>

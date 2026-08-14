@@ -29,7 +29,7 @@ require __DIR__.'/../layouts/header.php';
   <?php if(empty($tickets)):?>
   <div class="card-body text-center py-5"><i class="bi bi-inbox text-muted" style="font-size:3rem"></i><p class="text-muted mt-3 mb-1">No hay tickets con los filtros actuales.</p><a href="index.php?c=tickets&a=create" class="btn btn-primary btn-sm mt-2"><i class="bi bi-plus me-1"></i>Crear ticket</a></div>
   <?php else:?>
-  <div class="table-responsive"><table class="table mb-0">
+  <div class="table-responsive"><table class="table mb-0 js-data-table">
     <thead><tr><th>Folio</th><th>Título</th><?php if(in_array($rol,['admin','tecnico'])):?><th>Solicitante</th><?php endif;?><th>Categoría</th><th>Prioridad</th><th>Estado</th><?php if(in_array($rol,['admin','tecnico'])):?><th>Técnico</th><?php endif;?><th>Fecha</th><th style="width:60px"></th></tr></thead>
     <tbody>
     <?php foreach($tickets as $t):$est=$estados[$t['estado']]??['label'=>$t['estado'],'color'=>'secondary'];$pri=$prioridades[$t['prioridad']]??['label'=>$t['prioridad'],'color'=>'secondary'];$cat=$categorias[$t['categoria']]??['label'=>$t['categoria'],'icon'=>'bi-tools'];?>

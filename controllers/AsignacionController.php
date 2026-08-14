@@ -129,20 +129,61 @@ class AsignacionController {
     public function buscarEquipos(): void {
         $this->requireAdmin();
         header('Content-Type: application/json');
-        $q       = trim($_GET['q'] ?? '');
-        $equipos = [];
-        if (strlen($q) >= 2) {
-            foreach ($this->equipoModel->getAll(['buscar' => $q]) as $eq) {
-                $equipos[] = [
-                    'id'         => $eq['id'],
-                    'codigo'     => $eq['codigo'],
-                    'nombre'     => trim(($eq['marca'] ?? '') . ' ' . ($eq['modelo'] ?? '')),
-                    'categoria'  => $eq['categoria_nombre'],
-                    'disponible' => $this->asigModel->equipoDisponible($eq['id']),
-                ];
-            }
-        }
-        echo json_encode($equipos); exit;
+        $q       = trim($_GET['q'] ?? $_GET['term'] ?? '');
+        $page    = (int)($_GET['page'] ?? 1);
+        $result  = $this->equipoModel->searchForAsignacion($q, $page, 20);
+        $equipos = array_map(function ($eq) {
+            $nombre = trim(($eq['marca'] ?? '') . ' ' . ($eq['modelo'] ?? ''));
+            $serie  = $eq['numero_serie'] ? ' | Serie: ' . $eq['numero_serie'] : '';
+            $asig   = $eq['asignacion_activa_id'] ? ' | Asignado: ' . $eq['asignacion_activa_folio'] . ' - ' . $eq['asignacion_activa_usuario'] : '';
+            return [
+                'id'         => $eq['id'],
+                'text'       => $eq['codigo'] . ' - ' . ($nombre ?: $eq['categoria_nombre']) . $serie . $asig,
+                'codigo'     => $eq['codigo'],
+                'nombre'     => $nombre,
+                'categoria'  => $eq['categoria_nombre'],
+                'serie'      => $eq['numero_serie'],
+                'disponible' => empty($eq['asignacion_activa_id']),
+                'disabled'   => !empty($eq['asignacion_activa_id']),
+            ];
+        }, $result['items']);
+        echo json_encode(['results' => $equipos, 'pagination' => ['more' => $result['more']]]); exit;
+    }
+
+    public function buscarUsuarios(): void {
+        $this->requireAdmin();
+        header('Content-Type: application/json');
+        $q      = trim($_GET['q'] ?? $_GET['term'] ?? '');
+        $page   = (int)($_GET['page'] ?? 1);
+        $result = $this->userModel->searchActive($q, $page, 20);
+        $roles  = [
+            'auxiliar_administrativo' => 'Auxiliar Administrativo',
+            'coordinador'             => 'Coordinador',
+            'operario'                => 'Operario',
+            'ayudante'                => 'Ayudante',
+            'residente_becario'       => 'Residente/Becario',
+            'auxiliar_seguridad'      => 'Auxiliar de Seguridad',
+            'auxiliar_oficina'        => 'Auxiliar de Oficina',
+            'control_de_obra'         => 'Control de Obra',
+            'supervisor_seguridad'    => 'Supervisor de Seguridad',
+            'contra_incendios'        => 'Contra Incendios',
+            'tecnico_instrumentista'  => 'Tecnico Instrumentista',
+            'admin'                   => 'Administrador',
+            'tecnico'                 => 'Tecnico',
+            'maestro'                 => 'Maestro',
+        ];
+        $usuarios = array_map(function ($u) use ($roles) {
+            $nombre = trim($u['nombre'] . ' ' . $u['apellido']);
+            $rol = $roles[$u['rol']] ?? ucwords(str_replace('_', ' ', $u['rol']));
+            return [
+                'id'           => $u['id'],
+                'text'         => $nombre . ' - ' . $rol,
+                'nombre'       => $nombre,
+                'departamento' => $u['departamento'] ?? '',
+                'rol'          => $rol,
+            ];
+        }, $result['items']);
+        echo json_encode(['results' => $usuarios, 'pagination' => ['more' => $result['more']]]); exit;
     }
 
     public function acta(): void {

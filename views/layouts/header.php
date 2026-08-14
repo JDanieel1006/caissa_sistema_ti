@@ -8,6 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/2.1.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
     <?php if (isset($extraHead)) echo $extraHead; ?>
     <style>
         :root{--sidebar-w:260px;--navy:#0d1b2a;--navy-mid:#1b2e45;--navy-light:#243c58;--accent:#00c2ff;--accent2:#0077ff;--surface:#f0f4f9;--card-bg:#ffffff;--text-main:#0d1b2a;--text-muted:#6b7c93;--border:#dde4ef;--font-head:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;}
@@ -45,6 +48,9 @@
         .table tbody tr:hover{background:#f7faff;}
         .form-control,.form-select{border-radius:9px;border-color:var(--border);font-size:.88rem;transition:border-color .2s,box-shadow .2s;}
         .form-control:focus,.form-select:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(0,119,255,.15);}
+        .select2-container--bootstrap-5 .select2-selection{border-radius:9px;border-color:var(--border);font-size:.88rem;min-height:calc(1.5em + .75rem + 2px);}
+        .select2-container--bootstrap-5.select2-container--focus .select2-selection{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(0,119,255,.15);}
+        .dataTables_wrapper .dt-search input,.dataTables_wrapper .dt-length select{border-radius:9px;border-color:var(--border);font-size:.88rem;}
         .form-label{font-size:.83rem;font-weight:600;color:var(--text-main);margin-bottom:.35rem;}
         .btn-primary{background:var(--accent2);border-color:var(--accent2);font-weight:600;border-radius:9px;}
         .btn-primary:hover{background:#005ee0;border-color:#005ee0;}

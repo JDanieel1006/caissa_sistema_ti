@@ -1,8 +1,6 @@
 <?php
-$pageTitle = 'Nueva Asignación';
-require __DIR__ . '/../layouts/header.php';
+$pageTitle = 'Nueva Asignacion';
 
-// Pasar usuarios como JSON para autocompletar departamento y puesto
 $roleLabels = [
     'auxiliar_administrativo' => 'Auxiliar Administrativo',
     'coordinador'             => 'Coordinador',
@@ -14,18 +12,77 @@ $roleLabels = [
     'control_de_obra'         => 'Control de Obra',
     'supervisor_seguridad'    => 'Supervisor de Seguridad',
     'contra_incendios'        => 'Contra Incendios',
-    'tecnico_instrumentista'  => 'Técnico Instrumentista',
+    'tecnico_instrumentista'  => 'Tecnico Instrumentista',
     'admin'                   => 'Administrador',
-    'tecnico'                 => 'Técnico',
+    'tecnico'                 => 'Tecnico',
     'maestro'                 => 'Maestro',
 ];
-$usuariosJson = json_encode(array_map(fn($u) => [
-    'id'          => $u['id'],
-    'nombre'      => $u['nombre'] . ' ' . $u['apellido'],
-    'departamento'=> $u['departamento'] ?? '',
-    'rol'         => $roleLabels[$u['rol']] ?? ucwords(str_replace('_', ' ', $u['rol'])),
-    'activo'      => $u['activo'],
-], $usuarios));
+
+$usuarioSeleccionado = null;
+if (!empty($_POST['usuario_id'])) {
+    foreach ($usuarios as $u) {
+        if ((int)$u['id'] === (int)$_POST['usuario_id']) {
+            $usuarioSeleccionado = $u;
+            break;
+        }
+    }
+}
+
+$extraJs = <<<'JS'
+if (window.jQuery && $.fn.select2) {
+    const $usuario = $('#selUsuario');
+    const $equipo = $('#selEquipo');
+
+    $usuario.select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Busca y selecciona un usuario',
+        minimumInputLength: 0,
+        ajax: {
+            url: 'index.php?c=asignaciones&a=buscarUsuarios',
+            dataType: 'json',
+            delay: 250,
+            data: params => ({ q: params.term || '', page: params.page || 1 }),
+            processResults: data => data
+        }
+    });
+
+    $usuario.on('select2:select', function (e) {
+        const data = e.params.data || {};
+        $('#infoDepto').val(data.departamento || '');
+        $('#infoPuesto').val(data.rol || '');
+    });
+
+    const selectedUser = $usuario.find(':selected');
+    if (selectedUser.val()) {
+        $('#infoDepto').val(selectedUser.data('depto') || '');
+        $('#infoPuesto').val(selectedUser.data('rol') || '');
+    }
+
+    $equipo.select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Busca por codigo, marca, modelo o serie',
+        minimumInputLength: 0,
+        ajax: {
+            url: 'index.php?c=asignaciones&a=buscarEquipos',
+            dataType: 'json',
+            delay: 250,
+            data: params => ({ q: params.term || '', page: params.page || 1 }),
+            processResults: data => data
+        },
+        templateResult: function (item) {
+            if (!item.id) return item.text;
+            const estado = item.disponible ? '<span class="badge bg-success ms-2">Disponible</span>' : '<span class="badge bg-danger ms-2">Asignado</span>';
+            const serie = item.serie ? ' | Serie: ' + item.serie : '';
+            return $('<div><strong>' + item.codigo + '</strong> - ' + (item.nombre || item.categoria || '') + estado + '<br><small class="text-muted">' + (item.categoria || '') + serie + '</small></div>');
+        },
+        escapeMarkup: markup => markup
+    });
+}
+JS;
+
+require __DIR__ . '/../layouts/header.php';
 ?>
 <div class="row justify-content-center"><div class="col-lg-8">
 <?php if ($error): ?>
@@ -35,11 +92,10 @@ $usuariosJson = json_encode(array_map(fn($u) => [
 <?php endif; ?>
 
 <div class="card">
-  <div class="card-header"><i class="bi bi-file-earmark-plus me-2 text-success"></i>Nueva Asignación de Equipo</div>
+  <div class="card-header"><i class="bi bi-file-earmark-plus me-2 text-success"></i>Nueva Asignacion de Equipo</div>
   <div class="card-body p-4">
   <form method="POST" action="index.php?c=asignaciones&a=create">
 
-    <!-- ── Datos del Responsable ── -->
     <h6 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:1rem">
       <i class="bi bi-person me-2 text-primary"></i>Datos del Responsable
     </h6>
@@ -47,42 +103,36 @@ $usuariosJson = json_encode(array_map(fn($u) => [
     <div class="row g-3 mb-3">
       <div class="col-md-6">
         <label class="form-label">Nombre *</label>
-        <select name="usuario_id" id="selUsuario" class="form-select" required>
-          <option value="">— Selecciona un usuario —</option>
-          <?php foreach ($usuarios as $u): if (!$u['activo']) continue; ?>
-          <option value="<?= $u['id'] ?>"
-                  data-depto="<?= htmlspecialchars($u['departamento'] ?? '') ?>"
-                  data-rol="<?= htmlspecialchars($roleLabels[$u['rol']] ?? ucwords(str_replace('_', ' ', $u['rol']))) ?>"
-                  <?= (($_POST['usuario_id'] ?? '') == $u['id']) ? 'selected' : '' ?>>
-            <?= htmlspecialchars($u['nombre'] . ' ' . $u['apellido']) ?>
+        <select name="usuario_id" id="selUsuario" class="form-select no-select2" required>
+          <option value="">Busca y selecciona un usuario</option>
+          <?php if ($usuarioSeleccionado): ?>
+          <option value="<?= $usuarioSeleccionado['id'] ?>"
+                  data-depto="<?= htmlspecialchars($usuarioSeleccionado['departamento'] ?? '') ?>"
+                  data-rol="<?= htmlspecialchars($roleLabels[$usuarioSeleccionado['rol']] ?? ucwords(str_replace('_', ' ', $usuarioSeleccionado['rol']))) ?>"
+                  selected>
+            <?= htmlspecialchars($usuarioSeleccionado['nombre'] . ' ' . $usuarioSeleccionado['apellido']) ?>
           </option>
-          <?php endforeach; ?>
+          <?php endif; ?>
         </select>
       </div>
       <div class="col-md-6">
         <label class="form-label">Puesto</label>
-        <input type="text" id="infoPuesto" class="form-control"
-               style="background:#f7faff" readonly
-               placeholder="Se llena al seleccionar usuario">
+        <input type="text" id="infoPuesto" class="form-control" style="background:#f7faff" readonly placeholder="Se llena al seleccionar usuario">
       </div>
     </div>
 
     <div class="row g-3 mb-3">
       <div class="col-md-6">
         <label class="form-label">Departamento</label>
-        <input type="text" id="infoDepto" class="form-control"
-               style="background:#f7faff" readonly
-               placeholder="Se llena al seleccionar usuario">
+        <input type="text" id="infoDepto" class="form-control" style="background:#f7faff" readonly placeholder="Se llena al seleccionar usuario">
       </div>
       <div class="col-md-6">
-        <label class="form-label">Fecha de asignación</label>
-        <input type="text" class="form-control" style="background:#f7faff" readonly
-               value="<?= date('d/m/Y') ?>">
+        <label class="form-label">Fecha de asignacion</label>
+        <input type="text" class="form-control" style="background:#f7faff" readonly value="<?= date('d/m/Y') ?>">
         <input type="hidden" name="fecha_asignacion" value="<?= date('Y-m-d') ?>">
       </div>
     </div>
 
-    <!-- ── Datos del Contrato / Obra ── -->
     <hr>
     <h6 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:1rem">
       <i class="bi bi-file-text me-2 text-warning"></i>Datos del Contrato
@@ -91,19 +141,14 @@ $usuariosJson = json_encode(array_map(fn($u) => [
     <div class="row g-3 mb-3">
       <div class="col-md-8">
         <label class="form-label">Nombre de la Obra</label>
-        <input type="text" name="nombre_obra" class="form-control"
-               placeholder="Nombre del proyecto u obra"
-               value="<?= htmlspecialchars($_POST['nombre_obra'] ?? '') ?>">
+        <input type="text" name="nombre_obra" class="form-control" placeholder="Nombre del proyecto u obra" value="<?= htmlspecialchars($_POST['nombre_obra'] ?? '') ?>">
       </div>
       <div class="col-md-4">
         <label class="form-label">No. de Contrato</label>
-        <input type="text" name="numero_contrato" class="form-control"
-               placeholder="Ej. CTT-2025-001"
-               value="<?= htmlspecialchars($_POST['numero_contrato'] ?? '') ?>">
+        <input type="text" name="numero_contrato" class="form-control" placeholder="Ej. CTT-2025-001" value="<?= htmlspecialchars($_POST['numero_contrato'] ?? '') ?>">
       </div>
     </div>
 
-    <!-- ── Equipo ── -->
     <hr>
     <h6 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:1rem">
       <i class="bi bi-box-seam me-2 text-info"></i>Equipo a Asignar
@@ -111,26 +156,19 @@ $usuariosJson = json_encode(array_map(fn($u) => [
 
     <div class="mb-3">
       <label class="form-label">Buscar equipo *</label>
-      <div class="position-relative">
-        <input type="text" id="buscarEquipo" class="form-control"
-               placeholder="Escribe código, marca o modelo..." autocomplete="off"
-               value="<?php
-                 if ($equipoPresel) {
-                     echo htmlspecialchars($equipoPresel['codigo'] . ' — ' . ($equipoPresel['marca'] ?? '') . ' ' . ($equipoPresel['modelo'] ?? ''));
-                 } else {
-                     echo htmlspecialchars($_POST['equipo_texto'] ?? '');
-                 }
-               ?>">
-        <div id="listaEquipos" style="position:absolute;top:100%;left:0;right:0;z-index:999;background:#fff;border:1px solid #dde4ef;border-radius:0 0 10px 10px;max-height:220px;overflow-y:auto;display:none"></div>
-      </div>
-      <input type="hidden" name="equipo_id" id="hidEquipo"
-             value="<?= $equipoPresel ? $equipoPresel['id'] : ($_POST['equipo_id'] ?? '') ?>">
+      <select name="equipo_id" id="selEquipo" class="form-select no-select2" required>
+        <option value="">Busca por codigo, marca, modelo o serie</option>
+        <?php if ($equipoPresel): ?>
+        <option value="<?= $equipoPresel['id'] ?>" selected>
+          <?= htmlspecialchars($equipoPresel['codigo'] . ' - ' . trim(($equipoPresel['marca'] ?? '') . ' ' . ($equipoPresel['modelo'] ?? '')) . (($equipoPresel['numero_serie'] ?? '') ? ' | Serie: ' . $equipoPresel['numero_serie'] : '')) ?>
+        </option>
+        <?php endif; ?>
+      </select>
     </div>
 
-    <!-- ── Condición y Devolución ── -->
     <div class="row g-3 mb-3">
       <div class="col-md-6">
-        <label class="form-label">Condición de entrega</label>
+        <label class="form-label">Condicion de entrega</label>
         <select name="condicion_entrega" class="form-select">
           <?php foreach ($condiciones as $k => $c): ?>
           <option value="<?= $k ?>"><?= $c['label'] ?></option>
@@ -138,21 +176,19 @@ $usuariosJson = json_encode(array_map(fn($u) => [
         </select>
       </div>
       <div class="col-md-6">
-        <label class="form-label">Devolución esperada</label>
-        <input type="date" name="fecha_devolucion_esperada" class="form-control"
-               value="<?= htmlspecialchars($_POST['fecha_devolucion_esperada'] ?? '') ?>">
+        <label class="form-label">Devolucion esperada</label>
+        <input type="date" name="fecha_devolucion_esperada" class="form-control" value="<?= htmlspecialchars($_POST['fecha_devolucion_esperada'] ?? '') ?>">
       </div>
     </div>
 
     <div class="mb-4">
       <label class="form-label">Notas de entrega</label>
-      <textarea name="notas_entrega" class="form-control" rows="2"
-                placeholder="Observaciones sobre el estado o accesorios incluidos..."><?= htmlspecialchars($_POST['notas_entrega'] ?? '') ?></textarea>
+      <textarea name="notas_entrega" class="form-control" rows="2" placeholder="Observaciones sobre el estado o accesorios incluidos..."><?= htmlspecialchars($_POST['notas_entrega'] ?? '') ?></textarea>
     </div>
 
     <div class="d-flex gap-2">
       <button type="submit" class="btn btn-success px-4">
-        <i class="bi bi-check2 me-1"></i>Registrar Asignación
+        <i class="bi bi-check2 me-1"></i>Registrar Asignacion
       </button>
       <a href="index.php?c=asignaciones" class="btn btn-outline-secondary px-4">Cancelar</a>
     </div>
@@ -160,66 +196,4 @@ $usuariosJson = json_encode(array_map(fn($u) => [
   </div>
 </div>
 </div></div>
-
-<script>
-// ── Autocompletar Departamento y Puesto al seleccionar usuario ──
-document.getElementById('selUsuario')?.addEventListener('change', function () {
-    const opt   = this.options[this.selectedIndex];
-    const depto = opt.dataset.depto || '';
-    const rol   = opt.dataset.rol   || '';
-    document.getElementById('infoDepto').value  = depto;
-    document.getElementById('infoPuesto').value = rol;
-});
-
-// Precargar si ya venía seleccionado (ej. error de validación)
-(function () {
-    const sel = document.getElementById('selUsuario');
-    if (sel && sel.value) {
-        const opt = sel.options[sel.selectedIndex];
-        document.getElementById('infoDepto').value  = opt.dataset.depto || '';
-        document.getElementById('infoPuesto').value = opt.dataset.rol   || '';
-    }
-})();
-
-// ── Buscador de equipos ──
-let timer;
-const inp   = document.getElementById('buscarEquipo');
-const lista = document.getElementById('listaEquipos');
-const hid   = document.getElementById('hidEquipo');
-
-inp.addEventListener('input', function () {
-    clearTimeout(timer);
-    const q = this.value.trim();
-    if (q.length < 2) { lista.style.display = 'none'; return; }
-    timer = setTimeout(() => {
-        fetch('index.php?c=asignaciones&a=buscarEquipos&q=' + encodeURIComponent(q))
-            .then(r => r.json())
-            .then(data => {
-                if (!data.length) { lista.style.display = 'none'; return; }
-                lista.innerHTML = data.map(e => `
-                    <div class="px-3 py-2 d-flex justify-content-between align-items-center eq-item"
-                         style="cursor:pointer;font-size:.85rem;border-bottom:1px solid #f0f4f9;${!e.disponible ? 'opacity:.5' : ''}"
-                         data-id="${e.id}" data-txt="${e.codigo} — ${e.nombre}">
-                      <span><strong>${e.codigo}</strong> — ${e.nombre} <small class="text-muted">${e.categoria}</small></span>
-                      <span class="badge bg-${e.disponible ? 'success' : 'danger'}">${e.disponible ? 'Disponible' : 'Asignado'}</span>
-                    </div>`).join('');
-                lista.style.display = 'block';
-                lista.querySelectorAll('.eq-item').forEach(el => {
-                    el.addEventListener('click', function () {
-                        if (this.style.opacity === '0.5') return;
-                        inp.value = this.dataset.txt;
-                        hid.value = this.dataset.id;
-                        lista.style.display = 'none';
-                    });
-                    el.addEventListener('mouseenter', () => el.style.background = '#f7faff');
-                    el.addEventListener('mouseleave', () => el.style.background = '');
-                });
-            });
-    }, 300);
-});
-
-document.addEventListener('click', e => {
-    if (!lista.contains(e.target) && e.target !== inp) lista.style.display = 'none';
-});
-</script>
 <?php require __DIR__ . '/../layouts/footer.php'; ?>
