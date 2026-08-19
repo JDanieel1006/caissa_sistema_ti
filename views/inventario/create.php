@@ -17,7 +17,7 @@ foreach ($categorias as $c) { $catNombres[$c['id']] = $c['nombre']; }
     <div class="row g-3 mb-3">
       <div class="col-md-6">
         <label class="form-label">Categoría *</label>
-        <select name="categoria_id" class="form-select" id="selCat" required>
+        <select name="categoria_id" class="form-select no-select2" id="selCat" required>
           <option value="">— Selecciona —</option>
           <?php foreach ($categorias as $c): ?>
           <option value="<?= $c['id'] ?>" <?= $catSeleccionada == $c['id'] ? 'selected' : '' ?>>
@@ -197,8 +197,13 @@ function sincronizarHiddenImpresora() {
     document.getElementById('hiddenSpecs').innerHTML = html;
 }
 
-document.getElementById('selCat')?.addEventListener('change', function () {
-    const cid    = parseInt(this.value);
+function cargarDatosCategoria() {
+    const selCat = document.getElementById('selCat');
+    if (!selCat) return;
+    const codigoActual = document.getElementById('inpCodigo')?.value || '';
+    const debeGenerarCodigo = codigoActual.trim() === '';
+    const cid    = parseInt(selCat.value);
+    const value  = selCat.value;
     const nombre = CAT_NOMBRES[cid] || '';
     const esCPU  = cid === CAT_COMPUTADORA;
     const esImp  = nombre.toLowerCase().includes('impresora');
@@ -213,12 +218,14 @@ document.getElementById('selCat')?.addEventListener('change', function () {
             const el = document.querySelector('[name="'+n+'"]'); if(el) el.value='';
         });
     }
-    if (!this.value) return;
+    if (!value) return;
 
-    fetch('index.php?c=inventario&a=apiCategoria&cat_id=' + this.value)
+    fetch('index.php?c=inventario&a=apiCategoria&cat_id=' + encodeURIComponent(value))
         .then(r => r.json())
         .then(data => {
-            document.getElementById('inpCodigo').value = data.codigo || '';
+            if (debeGenerarCodigo || data.codigo) {
+                document.getElementById('inpCodigo').value = data.codigo || '';
+            }
             if (esImp) {
                 window._impCampos = data.campos;
                 sincronizarHiddenImpresora();
@@ -246,6 +253,12 @@ document.getElementById('selCat')?.addEventListener('change', function () {
                 document.getElementById('camposDinamicos').innerHTML = h;
             }
         });
-});
+}
+
+document.getElementById('selCat')?.addEventListener('change', cargarDatosCategoria);
+
+if (document.getElementById('selCat')?.value && !document.getElementById('inpCodigo')?.value) {
+    cargarDatosCategoria.call(document.getElementById('selCat'));
+}
 </script>
 <?php require __DIR__ . '/../layouts/footer.php'; ?>

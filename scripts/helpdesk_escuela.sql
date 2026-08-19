@@ -36,9 +36,9 @@ INSERT INTO usuarios (nombre,apellido,email,password,rol,departamento) VALUES
 ('María','González','maestro@escuela.edu.mx','$2b$12$0JErIiovxgnHbm1t.Dz8v.XQHDlECaQWGqZL0t/5OMYhgk8YLpsES','maestro','Matemáticas'),
 ('Roberto','Herrera','rherrera@escuela.edu.mx','$2b$12$0JErIiovxgnHbm1t.Dz8v.XQHDlECaQWGqZL0t/5OMYhgk8YLpsES','maestro','Ciencias');
 
-INSERT INTO categorias_equipo (id,nombre,icono) VALUES (1,'CPU / Computadora','bi-pc-display'),(2,'Proyector','bi-projector'),(3,'Teclado','bi-keyboard'),(4,'Mouse','bi-mouse'),(5,'Cable de Red','bi-ethernet'),(6,'Control Remoto','bi-wifi'),(7,'Bocinas','bi-speaker');
+INSERT INTO categorias_equipo (id,nombre,icono) VALUES (1,'CPU / Computadora','bi-pc-display'),(2,'Proyector','bi-projector'),(3,'Teclado','bi-keyboard'),(4,'Mouse','bi-mouse'),(5,'Cable de Red','bi-ethernet'),(6,'Control Remoto','bi-wifi'),(7,'Bocinas','bi-speaker'),(8,'Móvil / Tablet','bi-phone'),(9,'Starlink','bi-router');
 
-INSERT INTO campos_categoria (categoria_id,nombre_campo,etiqueta,tipo,orden) VALUES (1,'procesador','Procesador','texto',1),(1,'ram','Memoria RAM','texto',2),(1,'almacenamiento','Almacenamiento','texto',3),(1,'sistema_op','Sistema Operativo','texto',4),(1,'tipo','Tipo','select',5),(2,'lumens','Lúmenes','numero',1),(2,'resolucion','Resolución','select',2),(2,'tecnologia','Tecnología','select',3),(3,'conexion','Conexión','select',1),(3,'idioma','Idioma','select',2),(4,'conexion','Conexión','select',1),(4,'dpi','DPI','numero',2),(5,'categoria','Categoría','select',1),(5,'longitud','Longitud (metros)','numero',2),(7,'potencia','Potencia (W)','numero',1),(7,'conexion','Conexión','select',2);
+INSERT INTO campos_categoria (categoria_id,nombre_campo,etiqueta,tipo,orden) VALUES (1,'procesador','Procesador','texto',1),(1,'ram','Memoria RAM','texto',2),(1,'almacenamiento','Almacenamiento','texto',3),(1,'sistema_op','Sistema Operativo','texto',4),(1,'tipo','Tipo','select',5),(2,'lumens','Lúmenes','numero',1),(2,'resolucion','Resolución','select',2),(2,'tecnologia','Tecnología','select',3),(3,'conexion','Conexión','select',1),(3,'idioma','Idioma','select',2),(4,'conexion','Conexión','select',1),(4,'dpi','DPI','numero',2),(5,'categoria','Categoría','select',1),(5,'longitud','Longitud (metros)','numero',2),(7,'potencia','Potencia (W)','numero',1),(7,'conexion','Conexión','select',2),(8,'tipo_dispositivo','Tipo de dispositivo','select',1),(8,'sistema_operativo','Sistema operativo','select',2),(8,'imei','IMEI','texto',3),(8,'capacidad','Capacidad','texto',4),(8,'linea_telefono','Línea telefónica','texto',5),(9,'kit','Kit','select',1),(9,'router','Router','texto',2),(9,'antena','Antena','texto',3),(9,'plan_servicio','Plan / servicio','texto',4),(9,'ubicacion_instalacion','Ubicación de instalación','texto',5);
 
 UPDATE campos_categoria SET opciones='Escritorio|Laptop|All-in-One|Servidor' WHERE nombre_campo='tipo' AND categoria_id=1;
 UPDATE campos_categoria SET opciones='XGA (1024x768)|HD (1280x720)|Full HD (1920x1080)|4K' WHERE nombre_campo='resolucion' AND categoria_id=2;
@@ -48,6 +48,9 @@ UPDATE campos_categoria SET opciones='Español|Inglés' WHERE nombre_campo='idio
 UPDATE campos_categoria SET opciones='USB|PS/2|Bluetooth|Inalámbrico' WHERE nombre_campo='conexion' AND categoria_id=4;
 UPDATE campos_categoria SET opciones='Cat 5|Cat 5e|Cat 6|Cat 6a|Cat 7' WHERE nombre_campo='categoria' AND categoria_id=5;
 UPDATE campos_categoria SET opciones='USB|Jack 3.5mm|Bluetooth|RCA' WHERE nombre_campo='conexion' AND categoria_id=7;
+UPDATE campos_categoria SET opciones='Móvil|Tablet' WHERE nombre_campo='tipo_dispositivo' AND categoria_id=8;
+UPDATE campos_categoria SET opciones='Android|iOS|iPadOS|Otro' WHERE nombre_campo='sistema_operativo' AND categoria_id=8;
+UPDATE campos_categoria SET opciones='Residencial|Roam|Prioridad|Empresarial|Otro' WHERE nombre_campo='kit' AND categoria_id=9;
 
 INSERT INTO tickets (folio,titulo,descripcion,categoria,prioridad,estado,ubicacion,usuario_id,tecnico_id) VALUES
 ('TKT-2025-001','Sin conexión a internet en aula 3B','Las computadoras del aula 3B no tienen acceso a internet desde esta mañana.','internet','alta','en_proceso','Aula 3B',3,2),
