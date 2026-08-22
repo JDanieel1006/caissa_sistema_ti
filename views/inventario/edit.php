@@ -4,6 +4,7 @@ require __DIR__ . '/../layouts/header.php';
 $esCPU       = ($equipo['categoria_id'] == 1);
 $catActual   = $equipo['categoria_nombre'] ?? '';
 $esImpresora = stripos($catActual, 'impresora') !== false;
+$esStarlink  = stripos($catActual, 'starlink') !== false;
 $catNombres  = [];
 foreach ($categorias as $c) { $catNombres[$c['id']] = $c['nombre']; }
 ?>
@@ -113,8 +114,8 @@ foreach ($categorias as $c) { $catNombres[$c['id']] = $c['nombre']; }
       </div>
     </div>
 
-    <!-- Especificaciones — CPU y demás categorías (NO impresora) -->
-    <?php if (!$esImpresora && !empty($campos)): ?>
+    <!-- Especificaciones — CPU y demás categorías (NO impresora / NO Starlink) -->
+    <?php if (!$esImpresora && !$esStarlink && !empty($campos)): ?>
     <hr>
     <h6 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:1rem">Especificaciones</h6>
     <div class="row g-3 mb-3" id="camposDinamicos">
@@ -153,7 +154,73 @@ foreach ($categorias as $c) { $catNombres[$c['id']] = $c['nombre']; }
 <script>
 const CAT_COMPUTADORA = 1;
 const CAT_NOMBRES = <?= json_encode($catNombres) ?>;
+const SPEC_VALUES = <?= json_encode($specsActuales, JSON_UNESCAPED_UNICODE) ?>;
 const IMP_MAP = {'tipo_impresora':'impTipo','color':'impColor','resolucion_dpi':'impDpi','velocidad_ppm':'impPpm','bandeja_hojas':'impBandeja','contador_paginas':'impContador','conectividad':'impConex','direccion_ip':'impIp','direccion_mac':'impMac','toner_cartucho':'impToner'};
+
+function esStarlink(nombre) {
+    return (nombre || '').toLowerCase().includes('starlink');
+}
+
+function escapeHtml(v) {
+    return String(v ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+
+function campoHtml(c, col = 'col-md-6') {
+    const val = SPEC_VALUES[c.nombre_campo] || '';
+    let h = '<div class="'+col+'"><label class="form-label">'+c.etiqueta+'</label>';
+    if (c.tipo === 'select' && c.opciones) {
+        const opts = c.opciones.split('|');
+        h += '<select name="spec['+c.id+']" class="form-select"><option value="">— Selecciona —</option>';
+        opts.forEach(o => h += '<option value="'+escapeHtml(o)+'" '+(val === o ? 'selected' : '')+'>'+escapeHtml(o)+'</option>');
+        h += '</select>';
+    } else if (c.tipo === 'numero') {
+        h += '<input type="number" name="spec['+c.id+']" class="form-control" value="'+escapeHtml(val)+'">';
+    } else {
+        h += '<input type="text" name="spec['+c.id+']" class="form-control" value="'+escapeHtml(val)+'">';
+    }
+    return h + '</div>';
+}
+
+function buscarCampo(campos, nombre) {
+    return campos.find(c => c.nombre_campo === nombre);
+}
+
+function renderGrupo(campos, nombres, cols = 'col-md-6') {
+    return nombres.map(n => buscarCampo(campos, n)).filter(Boolean).map(c => campoHtml(c, cols)).join('');
+}
+
+function renderStarlink(campos) {
+    const specs = renderGrupo(campos, [
+        'tipo_kit',
+        'modelo_power_supply',
+        'serie_power_supply',
+        'modelo_router',
+        'serie_router',
+        'mac_router'
+    ]);
+    const servicio = renderGrupo(campos, [
+        'plan_servicio',
+        'tipo_servicio',
+        'id_servicio',
+        'estado_servicio'
+    ]);
+    const instalacion = renderGrupo(campos, ['ubicacion_instalacion'], 'col-md-12');
+
+    document.getElementById('camposDinamicos').innerHTML =
+        '<hr><h6 style="font-family:\'Syne\',sans-serif;font-weight:700;margin-bottom:1rem"><i class="bi bi-router me-2 text-primary"></i>Especificaciones Starlink</h6>' +
+        '<div class="row g-3 mb-3">' + specs + '</div>' +
+        '<hr><h6 style="font-family:\'Syne\',sans-serif;font-weight:700;margin-bottom:1rem"><i class="bi bi-broadcast me-2 text-success"></i>Servicio Starlink</h6>' +
+        '<div class="row g-3 mb-3">' + servicio + '</div>' +
+        '<hr><h6 style="font-family:\'Syne\',sans-serif;font-weight:700;margin-bottom:1rem"><i class="bi bi-geo-alt me-2 text-warning"></i>Instalación</h6>' +
+        '<div class="row g-3 mb-3">' + instalacion + '</div>';
+}
+
+function renderGenerico(campos) {
+    let h = '<hr><h6 style="font-family:\'Syne\',sans-serif;font-weight:700;margin-bottom:1rem">Especificaciones</h6><div class="row g-3">';
+    campos.forEach(c => { h += campoHtml(c); });
+    h += '</div>';
+    document.getElementById('camposDinamicos').innerHTML = h;
+}
 
 document.getElementById('btnVerPass')?.addEventListener('click', function () {
     const inp = document.getElementById('inpPass'), ico = document.getElementById('icoPass');
@@ -175,6 +242,7 @@ document.getElementById('selCat')?.addEventListener('change', function () {
     const nombre = CAT_NOMBRES[cid] || '';
     const esCPU  = cid === CAT_COMPUTADORA;
     const esImp  = nombre.toLowerCase().includes('impresora');
+    const esStar = esStarlink(nombre);
 
     document.getElementById('seccionRed').style.display       = esCPU ? 'block' : 'none';
     document.getElementById('seccionImpresora').style.display  = esImp ? 'block' : 'none';
@@ -189,26 +257,20 @@ document.getElementById('selCat')?.addEventListener('change', function () {
                 data.campos.forEach(c => { h += '<input type="hidden" name="spec['+c.id+']" id="hid_'+c.id+'" data-campo="'+c.nombre_campo+'" value="">'; });
                 document.getElementById('hiddenSpecs').innerHTML = h;
                 Object.values(IMP_MAP).forEach(elId => { document.getElementById(elId)?.addEventListener('input', sincronizarHidden); });
+            } else if (esStar) {
+                renderStarlink(data.campos || []);
             } else if (data.campos?.length) {
-                let h = '<hr><h6 style="font-family:\'Syne\',sans-serif;font-weight:700;margin-bottom:1rem">Especificaciones</h6><div class="row g-3">';
-                data.campos.forEach(c => {
-                    h += '<div class="col-md-6"><label class="form-label">'+c.etiqueta+'</label>';
-                    if (c.tipo === 'select' && c.opciones) {
-                        const opts = c.opciones.split('|');
-                        h += '<select name="spec['+c.id+']" class="form-select"><option value="">— Selecciona —</option>';
-                        opts.forEach(o => h += '<option value="'+o+'">'+o+'</option>');
-                        h += '</select>';
-                    } else if (c.tipo === 'numero') {
-                        h += '<input type="number" name="spec['+c.id+']" class="form-control">';
-                    } else {
-                        h += '<input type="text" name="spec['+c.id+']" class="form-control">';
-                    }
-                    h += '</div>';
-                });
-                h += '</div>';
-                document.getElementById('camposDinamicos').innerHTML = h;
+                renderGenerico(data.campos);
             }
         });
 });
+
+const selCatInicial = document.getElementById('selCat');
+const catInicialNombre = CAT_NOMBRES[parseInt(selCatInicial?.value || '0')] || '';
+if (selCatInicial?.value && esStarlink(catInicialNombre)) {
+    fetch('index.php?c=inventario&a=apiCategoria&cat_id=' + encodeURIComponent(selCatInicial.value))
+        .then(r => r.json())
+        .then(data => renderStarlink(data.campos || []));
+}
 </script>
 <?php require __DIR__ . '/../layouts/footer.php'; ?>

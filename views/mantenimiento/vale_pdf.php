@@ -3,6 +3,26 @@ $folio   = str_pad($mant['id'], 6, '0', STR_PAD_LEFT);
 $logoUrl = $_SERVER['DOCUMENT_ROOT'] . '/helpdesk/public/img/logo.jpg';
 $logoB64 = file_exists($logoUrl) ? 'data:image/jpeg;base64,'.base64_encode(file_get_contents($logoUrl)) : '';
 $tip     = ['preventivo'=>'Mantenimiento Preventivo','correctivo'=>'Mantenimiento Correctivo'][$mant['tipo']] ?? $mant['tipo'];
+$esStarlink = stripos($mant['categoria_nombre'] ?? '', 'starlink') !== false;
+$specsMap = [];
+foreach (($specs ?? []) as $s) {
+    if (!empty($s['valor'])) $specsMap[$s['nombre_campo']] = ['etiqueta' => $s['etiqueta'], 'valor' => $s['valor']];
+}
+$starlinkSpecs = [
+    'tipo_kit',
+    'modelo_power_supply',
+    'serie_power_supply',
+    'modelo_router',
+    'serie_router',
+    'mac_router',
+];
+$starlinkServicio = [
+    'plan_servicio',
+    'tipo_servicio',
+    'id_servicio',
+    'estado_servicio',
+];
+$starlinkInstalacion = ['ubicacion_instalacion'];
 ?><!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"><title>Vale Mantenimiento <?=$folio?></title>
 <style>
@@ -29,6 +49,7 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#000;background
 .items-table{width:100%;border-collapse:collapse;border:1.5px solid #000;margin-top:5px;}
 .items-table th{border:1px solid #000;padding:3px 4px;font-size:10px;font-weight:bold;text-align:center;background:#f0f0f0;}
 .items-table td{border:1px solid #000;padding:4px;font-size:10px;vertical-align:top;}
+.spec-title{font-weight:bold;background:#f0f0f0;text-align:left;}
 .c-num{width:9mm;text-align:center;}
 .c-act{text-align:left;}
 .c-estado{width:28mm;text-align:center;}
@@ -95,6 +116,44 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#000;background
     </tr>
     <?php endif;?>
   </table>
+
+  <?php if ($esStarlink && !empty($specsMap)): ?>
+  <table class="items-table" style="margin-top:5px">
+    <thead><tr><th colspan="4" class="spec-title">ESPECIFICACIONES STARLINK</th></tr></thead>
+    <tbody>
+      <?php foreach (array_chunk($starlinkSpecs, 2) as $par): ?>
+      <tr>
+        <?php foreach ($par as $campo): ?>
+        <td class="lbl" style="width:28mm"><?= htmlspecialchars($specsMap[$campo]['etiqueta'] ?? '') ?></td>
+        <td><?= htmlspecialchars($specsMap[$campo]['valor'] ?? '') ?></td>
+        <?php endforeach; ?>
+        <?php if (count($par) === 1): ?><td></td><td></td><?php endif; ?>
+      </tr>
+      <?php endforeach; ?>
+    </tbody>
+  </table>
+
+  <table class="items-table" style="margin-top:5px">
+    <thead><tr><th colspan="4" class="spec-title">SERVICIO STARLINK</th></tr></thead>
+    <tbody>
+      <?php foreach (array_chunk($starlinkServicio, 2) as $par): ?>
+      <tr>
+        <?php foreach ($par as $campo): ?>
+        <td class="lbl" style="width:28mm"><?= htmlspecialchars($specsMap[$campo]['etiqueta'] ?? '') ?></td>
+        <td><?= htmlspecialchars($specsMap[$campo]['valor'] ?? '') ?></td>
+        <?php endforeach; ?>
+        <?php if (count($par) === 1): ?><td></td><td></td><?php endif; ?>
+      </tr>
+      <?php endforeach; ?>
+      <?php foreach ($starlinkInstalacion as $campo): if (!empty($specsMap[$campo]['valor'])): ?>
+      <tr>
+        <td class="lbl">UBICACIÓN DE INSTALACIÓN:</td>
+        <td colspan="3"><?= htmlspecialchars($specsMap[$campo]['valor']) ?></td>
+      </tr>
+      <?php endif; endforeach; ?>
+    </tbody>
+  </table>
+  <?php endif; ?>
 
   <table class="items-table" style="margin-top:5px">
     <thead><tr>

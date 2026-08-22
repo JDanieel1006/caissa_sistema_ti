@@ -7,7 +7,13 @@ require __DIR__ . '/../layouts/header.php';
 <?php endif; ?>
 
 <div class="row g-3 mb-4">
-<?php foreach ([['Total','bi-box-seam','#e8f0fe','#0077ff',$stats['total']],['Buenos','bi-shield-check','#d4edda','#198754',$stats['buenos']],['Danados','bi-exclamation-triangle','#fce4ec','#c62828',$stats['daÃ±ados']],['Reparacion','bi-tools','#fff3cd','#d97700',$stats['reparacion']]] as [$l,$i,$bg,$c,$v]): ?>
+<?php
+$totalEquipos = $stats['total'] ?? 0;
+$buenosEquipos = $stats['buenos'] ?? 0;
+$danadosEquipos = $stats['dañados'] ?? $stats['daÃ±ados'] ?? $stats['danados'] ?? 0;
+$reparacionEquipos = $stats['reparacion'] ?? 0;
+?>
+<?php foreach ([['Total','bi-box-seam','#e8f0fe','#0077ff',$totalEquipos],['Buenos','bi-shield-check','#d4edda','#198754',$buenosEquipos],['Dañados','bi-exclamation-triangle','#fce4ec','#c62828',$danadosEquipos],['Reparación','bi-tools','#fff3cd','#d97700',$reparacionEquipos]] as [$l,$i,$bg,$c,$v]): ?>
 <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-icon" style="background:<?= $bg ?>;color:<?= $c ?>"><i class="<?= $i ?>"></i></div><div><div class="stat-value"><?= $v ?></div><div class="stat-label"><?= $l ?></div></div></div></div>
 <?php endforeach; ?>
 </div>
